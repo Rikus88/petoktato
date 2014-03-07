@@ -1,0 +1,165 @@
+<?php
+    //Adatbázishoz csatlakozás
+     require_once("php/dbconfig.php")
+
+    //Felhasználó azonosítás
+
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+     <head>
+        <meta charset="utf-8" />
+        <title>PET technológiák mindenkinek</title>
+        <meta name="author" content="Iliás Renáta" />
+        <link href="style.css" rel="stylesheet" type="text/css" />
+        
+        <script src="js/jquery-1.2.6.js" type="text/javascript"></script>
+        <script src="js/jquery.scrollTo-1.3.3.js" type="text/javascript"></script>
+        <script src="js/jquery.localscroll-1.2.5.js" type="text/javascript" charset="utf-8"></script>
+        <script src="js/jquery.serialScroll-1.2.1.js" type="text/javascript" charset="utf-8"></script>
+        <script src="js/slider_left_to_rigth.js" type="text/javascript" charset="utf-8"></script>
+        
+
+</head>
+<body>
+	
+    <div id="slider">
+    	<!--A tábla teteje-->
+        <div id="fejlec">
+        	<div id="oldalcim">
+	        	<a href="#home"><img src="images/oldalcim.png" alt="Oldal címe" /></a>
+            </div>
+            <a class="fejlec_menu" href="http:\\www.facebook.com"><img src="images/facebook.png" alt="Facebook" /></a>
+            <a class="fejlec_menu" href="#help"><img src="images/help.png" alt="Segítség" /></a>
+        </div>
+        
+        <!--Tartalom panelok-->
+        <div id="tartalom">
+        
+            <div class="scroll">
+                <div class="scrollContainer">
+                
+                    <!--Kezdőpanel-->
+                    <div class="panel" id="home">
+                    	<div class="doboz_550 balra">
+                            <h1>Üdvözöllek</h1>
+                            <p><em>Na de miért is PET? Ne házikedvencre gondolj, ennél összetettebb a dolog. De még mielőtt továbbmennél gondolj bele gondoltál-e már arra, hogy milyen adatokat tartanak rólad nyílván a különböző weboldalak?</em></p>
+                            <p>Ha foglalkoztatott már a téma egy kicsit is, vagy érdekel, hogy mi mindent tárol rólad a google, vagy mit olvasgat a Facebook ha mobilról </p>
+
+                            <div class="terkoz"></div>
+                            
+                            <h2>Kvíz</h2>
+                            <div class="kep_keret kep_jobbra"><img src="images/kviz.png" alt="Kvíz" /></div>
+                            <p>Szituációs kvíz. Te mit tennél egy-egy, az adataidat érintő szituációban? Tudd meg most!</p>
+                            <div class="tovabb_link"><a href="kviz.html">Próbáld ki!</a></div>
+						</div>
+                        
+                        <div class="doboz_300 jobbra">
+                            <h2>Hogyan védd a privát szférád</h2> 
+                            <p><em>Donec ac eros ac nunc blandit hendrerit. Vestibulum tincidunt, odio at ultricies sollicitudin.</em></p>
+                            <p>Mauris ligula tortor, congue laoreet rutrum eget, suscipit nec augue hendrerit velit adipiscing.</p>
+                            <div class="tovabb_link"><a href="#adatvedelem">Kattints ide!</a></div>
+                            
+                            <div class="terkoz"></div>
+                            
+                            <h2>És még mi minden?</h2>
+                            <p>A menük között választhatsz még a további lehetőségek közül. Tölts ki egy <a href="#teszt">tesztet</a>, vagy nézd meg milyen <a href="#elm">elméleti anyagok</a> kapcsolódnak ehhez a területhez, vagy nézd meg a <a href="#profil">profilodat</a>, hány érmet szereztél eddig.</p>
+                        </div>
+                    </div> 
+                    
+                    <!--Adatvédelem panel-->
+                    <div class="panel" id="adatvedelem">
+                        <h1>Védd az adataidat!</h1>
+                        <div class="doboz_550 balra">
+                            <div id="lista_form">
+                                 <form method="post" name="petek" action="lista.php">
+                                     <br>
+                                     <br>
+                                     <label for="cim">Válaszd ki, hogy mit szeretnél védeni</label><br>
+                                    <select name="pet" id="pet">
+                                        <option value="1">Első</option>
+                                        <option value="2">Második</option>
+                                    </select>
+                                     <br>
+                                    <select name="pet" id="pet">
+                                        <option value="1">Első</option>
+                                        <option value="2">Második</option>
+                                    </select>
+                                     <br>
+                                    <select name="pet" id="pet">
+                                        <option value="1">Első</option>
+                                        <option value="2">Második</option>
+                                    </select>
+                                     <br>
+                                     <br>
+                                    <input type="submit" class="ok_btn" name="ok" id="ok" value="Mutasd!" />
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <div class="doboz_300 jobbra">
+                            <h2>Ezeket találtam:</h2> 
+                            
+                        </div>
+                        
+                    </div>
+                    
+                    <!--Elméleti panel-->
+                    <div class="panel" id="elm">
+                        	<h1>Szabályok és a sose olvasott felhasználói feltételek</h1>
+                            
+                            
+                       
+                    </div>
+                
+                    <!--Tesztek panel-->
+                    <div class="panel" id="teszt">
+                        <h1>Az adataid biztonságban vannak? Teszteld!</h1>
+                        
+                        <div id="scroll_container">
+                            
+                        </div>
+                    </div>
+                
+                    <!--Felhasználói profil panel-->
+                    <div class="panel" id="profil">
+                    	<h1>!!NÉV!!</h1>
+                        <div class="doboz_300 balra">
+                            <div class="profil_kep balra"><img src="images/def_pic.png" alt="Profilkép"/></div>
+                        </div>
+                        <div class="doboz_550 jobbra">
+                            <h1>Ezt érted el eddig az alkalmazásban:</h1>
+                            
+                        </div>
+                        
+                	</div>
+
+                    <div class="panel" id="help">
+                    	<h1>Egy kis segítségkérés</h1>
+                        <div id="scroll_container">
+                            <iframe src="https://spreadsheets.google.com/spreadsheet/embeddedform?formkey=dEx3cjFPQ2NqTm5Va2taTHdLQnJsRkE6MQ" width="710" height="705">Betöltés...</iframe>
+                        </div>
+            
+                    </div>
+                </div>
+            </div>
+            
+            <!--Panelok vége-->
+        
+        </div>
+        
+        <!--Alsó gomb menüsor-->
+        <div id="menu">
+            <ul class="navigation">
+                <li><a href="#home" class="selected"><img src="images/button_kezd.png" alt="Kezdőlap" /></a></li>
+                <li><a href="#adatvedelem"><img src="images/button_adatv.png" alt="Adatvédelem" /></a></li>
+                <li><a href="#elm"><img src="images/button_elm.png" alt="Elmélet" /></a></li>
+                <li><a href="#teszt"><img src="images/button_teszt1.png" alt="Teszt" /></a></li>
+                <li><a href="#profil"><img src="images/button_profil.png" alt="Profil" /></a></li>
+            </ul>
+         </div>
+    </div>
+
+</body>
+</html>

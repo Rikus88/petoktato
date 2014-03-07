@@ -1,0 +1,329 @@
+Az oldal csak likolás után legyen elérhető.
+Az index.php elejére:
+    <?php
+        $signed_request = $_REQUEST["signed_request"];
+        list($encoded_sig, $payload) = explode(‘.’, $signed_request, 2);
+        $data=json_decode(base64_decode(strtr($payload, ‘-_’, ‘+/’)),true);
+        $has_liked = $data["page"]["liked"];
+
+Kiegészítve azzal, hogy likolta-e már a felhaszánló:
+if($has_liked){
+  //az adott látogató rajongó
+  //kérjük el a megfelelő engedélyeket
+} else {
+  //az adott látogató nem rajongó
+  //kérjük meg, hogy előbb legyen az
+  ?>
+  Üdvözöllek Idegen! Lépj be rajongóink közé.
+  <?php
+}
+
+Ha még nem lájkolta az alkalmazást engedélyeztetni kell:
+    if (!$data["user_id"]) {
+      //még nem engedélyezte
+      //irányítsuk át az engedélyező képernyőre
+    } else {
+      //már engedélyezte
+      //írjuk ki az egyedi azonosítóját
+      echo $data["user_id"];
+    }
+
+Ezt oda kell másolni ahol a rajongóknak szánt tartalom jelenik meg:
+    if($has_liked){
+      //az adott látogató rajongó
+      //kérjük el a megfelelő engedélyeket
+      if (!$data["user_id"]) {
+        //még nem engedélyezte
+        //irányítsuk át az engedélyező képernyőre
+      } else {
+        //már engedélyezte
+        //írjuk ki az egyedi azonosítóját
+        echo $data["user_id"];
+      }
+    } ...
+
+Engedélyeztetés ezen az url-en keresztül:
+http://www.facebook.com/dialog/oauth?client_id=_APP_ID_&redirect_uri=_REDIRECT_URL_&scope=_APP_PERMISSIONS_
+Ahol az 
+  - _APP_ID_:a saját alkalmazás id-ja
+  - REDIRECT URL: ide irányítjuk majd át lájkolás után a felhasználót ez majd a tab url-lesz ahova az alkalmazás telepítve lesz
+    az oldal, amihez hozzáadom majd az alkalmazást, annak a linkjének a vége.
+  - APP PERMISSIONS: ez tartalmazza majd az engedélyeket
+
+Kiegészítve az engedélyekkel:
+    if($has_liked){
+      if (!$data["user_id"]) {
+        //még nem engedélyezte -> irányítsuk át az engedélyező képernyőre
+        $app_id = "0123456789"; //ide kerül a létrehozott alkalmazás ID-ja
+        $redirect_url = urlencode("http://facebook.com/..."); //ide kerül a tab URL
+        $scope = ""; //jelen esetben üres marad
+        $auth_url = "http://www.facebook.com/dialog/oauth?client_id=" . $app_id . "&redirect_uri=" . $redirect_url . "&scope=" . $scope;
+    echo('<script type="text/javascript">// <![CDATA[
+      top.location.href="' . $auth_url . '"
+    // ]]></script>');
+      }
+    } ...
+
+Kiegészítve az egészet:
+    <?php
+    $signed_request = $_REQUEST["signed_request"];
+    list($encoded_sig, $payload) = explode('.', $signed_request, 2);
+    $data=json_decode(base64_decode(strtr($payload, '-_', '+/')),true);
+    $has_liked = $data["page"]["liked"];
+ 
+    if($has_liked){
+    //az adott látogató rajongó
+    //kérjük el a megfelelő engedélyeket
+      if (!$data["user_id"]) {
+        //még nem engedélyezte
+        //irányítsuk át az engedélyező képernyőre
+        $app_id = "0123456789"; //ide kerül a létrehozott alkalmazás ID-ja
+        $redirect_url = urlencode("http://facebook.com/..."); //ide kerül a tab URL
+        $scope = ""; //jelen esetben üres marad
+        $auth_url = "http://www.facebook.com/dialog/oauth?client_id=" . $app_id . "&redirect_uri=" . $redirect_url . "&scope=" . $scope;
+    echo('<script type="text/javascript">// <![CDATA[
+      top.location.href="' . $auth_url . '"
+    // ]]></script>');
+      } else {
+        //már engedélyezte
+        //írjuk ki az egyedi azonosítóját
+        echo $data["user_id"];
+      }
+    } else {
+      //az adott látogató nem rajongó
+      //kérjük meg, hogy előbb legyen az
+      ?>
+      Üdvözöllek Idegen! Lépj be rajongóink közé.
+      <?php
+    }
+
+Ez lesz eddig az index.php
+A létrehozott index.php filet ezzel a tartalommal másoljuk fel egy olyan tárhelyre, ami rendelkezik ssl titkosítással is.
+Térjünk vissza az alkalmazásunk beállításait tartalmazó felületre és a Page Tab fülön, a Page Tab Name mezőben adjuk meg a nevet, amivel meg szeretnénk 
+jeleníteni a tabot a rajongói oldalunkon. A Page Tab URL mezőben adjuk meg az index.php http elérését, a Secure Page Tab mezőben pedig a https elérését.
+(Több esetben problémát okozott, ha nem szerepelt az index.php az URL végén, így figyeljünk rá, hogy ezt is írjuk be. Ha más a fileunk neve, akkor
+természetesen azt.)
+
+Az alkalmazást telepíteni itt lehet:
+http://besocial.hu/stuff/app_install/
+
+Különféle engedélyek kérése:
+Az index.php-s lap elejére az előző kódhoz includolni kell a facebook.php fájlt, így:
+    <?php
+    ob_start(); //csak probléma megelőzés miatt
+    require "facebook.php";
+    $signed_request = $_REQUEST["signed_request"];
+    list($encoded_sig, $payload) = explode(‘.’, $signed_request, 2);
+    $data=json_decode(base64_decode(strtr($payload, ‘-_’, ‘+/’)),true);
+    $has_liked = $data["page"]["liked"];
+
+Itt: https://github.com/facebook/facebook-php-sdk található egy hasznos kódrészletet, aminek a segítségével elérhetjük az alkalmazásunkat aktuálisan
+használó user publikus, az appnak a telepítési folyamat során átadott adatait.
+
+Az index.php fileunkban a következő kódsort: echo $data["user_id"] a helyére illesszük be a következőket:
+
+    $facebook = new Facebook(array(
+      'appId'  => 'APP ID', //ide a saját APP ID-t írjuk
+      'secret' => 'APP SECRET', //ide a saját APP SECRET-et írjuk
+    ));
+    $user = $facebook->getUser();
+    if ($user) {
+      try {
+        $user_profile = $facebook->api('/me');
+      } catch (FacebookApiException $e) {
+        error_log($e);
+        $user = null;
+      }
+    }
+
+Így kell kiiratni a felhasználó profilját:
+    echo "<pre>";
+    print_r($user_profile);
+    echo "</pre>";
+
+A felhasználó teljes nevének kiíratásához használhatjuk a következő kódsort: echo $user_profile['name'];
+Amennyiben csak a keresztnevet szeretnénk megjeleníteni ez a következőre módosul:
+echo $user_profile['first_name'];
+
+A teljes átalakított kód ilyen lesz: 
+        <?php
+        ob_start();
+        require "facebook.php";
+        $signed_request = $_REQUEST["signed_request"];
+        list($encoded_sig, $payload) = explode('.', $signed_request, 2);
+        $data = json_decode(base64_decode(strtr($payload, '-_', '+/')), true);
+        $has_liked = $data["page"]["liked"];
+ 
+        if($has_liked){
+          //az adott látogató rajongó -> kérjük el a megfelelő engedélyeket
+          if (!$data["user_id"]) {
+            //még nem engedélyezte -> irányítsuk át az engedélyező képernyőre
+            $app_id = "0123456789"; //ide kerül a létrehozott alkalmazás ID-ja
+            $redirect_url = urlencode("https://www.facebook.com/..."); //ide kerül a tab URL
+            $scope = "email";
+            $auth_url = "http://www.facebook.com/dialog/oauth?client_id=" . $app_id . "&redirect_uri=" . $redirect_url . "&scope=" . $scope;
+            echo("<script> top.location.href='" . $auth_url . "'</script>");
+          } else {
+            //már engedélyezte -> írjuk ki az egyedi azonosítóját
+            //echo $data["user_id"];
+            $facebook = new Facebook(array(
+              'appId' => '0123456789', //saját APP ID
+              'secret' => 'afghjzthrgef5467zhgvwg5rn6', // saját APP SECRET
+            ));
+ 
+            $user = $facebook->getUser();
+ 
+            if ($user) {
+              try {
+                $user_profile = $facebook->api('/me');
+              } catch (FacebookApiException $e) {
+                error_log($e);
+                $user = null;
+              }
+            }
+ 
+            echo "<pre>";
+            print_r($user_profile);
+            echo "</pre>";
+ 
+            echo $user_profile['email'];
+          }
+        } else {
+          //az adott látogató nem rajongó -> kérjük meg, hogy előbb legyen az
+          ?>
+          Üdvözöllek Idegen! Lépj be rajongóink közé.
+          <?php
+        }
+        ?>
+
+Engedélykérés, hogy postolhassunk a felhasználó falára:
+    <?php
+    ob_start();
+    require "facebook.php";
+    $signed_request = $_REQUEST["signed_request"];
+    list($encoded_sig, $payload) = explode('.', $signed_request, 2);
+    $data = json_decode(base64_decode(strtr($payload, '-_', '+/')), true);
+    $has_liked = $data["page"]["liked"];
+ 
+    if($has_liked){
+        //az adott látogató rajongó -> kérjük el a megfelelő engedélyeket
+        if(!$data["user_id"]) {
+            //még nem engedélyezte -> irányítsuk át az engedélyező képernyőre
+            $app_id = "0123456789"; //ide kerül a létrehozott alkalmazás ID-ja
+            $redirect_url = urlencode("https://www.facebook.com/..."); //ide kerül a tab URL
+            $scope = "publish_stream";
+            $auth_url = "http://www.facebook.com/dialog/oauth?client_id=" . $app_id . "&redirect_uri=" . $redirect_url . "&scope=" . $scope;
+            echo("<script> top.location.href='" . $auth_url . "'</script>");
+        } else {
+            //engedélyezte az alkalmazást
+            //jelenítsünk meg egy gombot, aminek a segítségével postolhat a falára
+        }
+    } else {
+        //az adott látogató nem rajongó -> kérjük meg, hogy előbb legyen az
+        ?>
+        Üdvözöllek Idegen! Lépj be rajongóink közé.
+        <?php
+    }
+    ?>
+
+Egy gomb megnyomásával postolhassunk: A hírfolyamba történő postoláshoz azonban szükségünk lesz egy “kulcsra” (access_token), aminek a lekéréséhez
+$has_liked = $data["page"]["liked"] után írjuk be a következő sorokat:
+
+    $facebook = new Facebook(array(
+        'appId' => 'APP ID', //ide a saját APP ID-t írjuk
+        'secret'  => 'APP SECRET', //ide a saját APP SECRET-et írjuk
+        'cookie' => true,
+        'fileUpload' => true //képfeltöltéshez szükséges
+    ));
+    Ha ez kész, a “//jelenítsünk meg egy gombot, aminek a segítségével postolhat a falára” megjegyzés után egészítsük ki a forrást a következő sorokkal:
+
+    $access_token = $facebook->getAccessToken();
+    ?>
+    <form method="post" action="">
+        <input type="hidden" name="access_token" value="<?php echo $access_token; ?>" />
+        <input type="submit" name="post_img_to_wall" value="Kép feltöltése a hírfolyamomba" />
+    </form>
+    <?php
+
+Ezt követően térjünk vissza a kódunk elejére és az if($has_liked){ sor elé gépeljük a következőket:
+if($_POST['post_img_to_wall'] && $_POST['access_token']){
+    $current_access_token = $_POST['access_token'];
+    try {
+        //kép postolása az adott felhasználó fotói közé
+        //a meghatározott képaláírással
+        //az alkalmazás automatikusa létrehoz egy albumot
+        //ez az album az app neve alapján fog létrejönni
+        //az így feltöltött kép kerül ki a hírfolyamba
+        $img = "besocial.jpg"; //a kép, amit fel szeretnénk tölteni a falra, az index.php mellé kerüljön
+        $caption = "Ez a szöveg a kép alá fog kerülni";
+        //kép feltöltése a hírfolyamba
+        $facebook->api("/me/photos", "post", array('message' =>$caption, 'source' => '@'.$img, "access_token"=>$current_access_token));
+        echo "Sikeres küldés";
+    } catch (FacebookApiException $e) {
+        //nem sikerült a küldés
+        error_log($e);
+    }
+    exit();
+}
+
+teljes kód ilyen lesz:
+        <?php
+        ob_start();
+        require "facebook.php";
+        $signed_request = $_REQUEST["signed_request"];
+        list($encoded_sig, $payload) = explode('.', $signed_request, 2);
+        $data = json_decode(base64_decode(strtr($payload, '-_', '+/')), true);
+        $has_liked = $data["page"]["liked"];
+        $facebook = new Facebook(array(
+            'appId' => 'APP ID', //ide a saját APP ID-t írjuk
+            'secret'  => 'APP SECRET', //ide a saját APP SECRET-et írjuk
+            'cookie' => true,
+            'fileUpload' => true //képfeltöltéshez szükséges
+        ));
+        if($_POST['post_img_to_wall'] && $_POST['access_token']){
+            $current_access_token = $_POST['access_token'];
+            try {
+                //kép postolása az adott felhasználó fotói közé
+                //a meghatározott képaláírással
+                //az alkalmazás automatikusa létrehoz egy albumot
+                //ez az album az app neve alapján fog létrejönni
+                //az így feltöltött kép kerül ki a hírfolyamba
+                $img = "besocial.jpg"; //a kép, amit fel szeretnénk tölteni a falra, az index.php mellé kerüljön
+                $caption = "Ez a szöveg a kép alá fog kerülni";
+                //kép feltöltése a hírfolyamba
+                $facebook->api("/me/photos", "post", array('message' =>$caption, 'source' => '@'.$img, "access_token"=>$current_access_token));
+                echo "Sikeres küldés";
+            } catch (FacebookApiException $e) {
+                //nem sikerült a küldés
+                error_log($e);
+            }
+            exit();
+        }
+        if($has_liked){
+            //az adott látogató rajongó -> kérjük el a megfelelő engedélyeket
+            if(!$data["user_id"]) {
+                //még nem engedélyezte -> irányítsuk át az engedélyező képernyőre
+                $app_id = "0123456789"; //ide kerül a létrehozott alkalmazás ID-ja
+                $redirect_url = urlencode("https://www.facebook.com/..."); //ide kerül a tab URL
+                $scope = "publish_stream";
+                $auth_url = "http://www.facebook.com/dialog/oauth?client_id=" . $app_id . "&redirect_uri=" . $redirect_url . "&scope=" . $scope;
+                echo("<script> top.location.href='" . $auth_url . "'</script>");
+            } else {
+                //engedélyezte az alkalmazást
+                //jelenítsünk meg egy gombot, aminek a segítségével postolhat a falára
+                $access_token = $facebook->getAccessToken();
+                ?>
+                <form method="post" action="">
+                    <input type="hidden" name="access_token" value="<?php echo $access_token; ?>" />
+                    <input type="submit" name="post_img_to_wall" value="Kép feltöltése a hírfolyamomba" />
+                </form>
+                <?php
+            }
+        } else {
+            //az adott látogató nem rajongó -> kérjük meg, hogy előbb legyen az
+            ?>
+            Üdvözöllek Idegen! Lépj be rajongóink közé.
+            <?php
+        }
+        ?>
+
